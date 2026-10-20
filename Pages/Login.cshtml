@@ -1,0 +1,27 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log ind";
+}
+
+<section class="kort login">
+    <div class="login-ikon">@Ikon.Bestik</div>
+    <h1>Velkommen</h1>
+    <p class="undertekst">Log ind for at vælge, hvilke dage du spiser i kantinen.</p>
+
+    @if (Model.Fejl is not null)
+    {
+        <p class="fejl">@Ikon.Advarsel <span>@Model.Fejl</span></p>
+    }
+
+    <form method="post" class="formular">
+        <label for="brugernavn">Brugernavn</label>
+        <input id="brugernavn" asp-for="Brugernavn" autocomplete="username" autofocus required />
+
+        <label for="kode">Adgangskode</label>
+        <input id="kode" asp-for="Kode" type="password" autocomplete="current-password" required />
+
+        <input type="hidden" asp-for="ReturnUrl" />
+        <button type="submit" class="knap fuld-bredde">Log ind</button>
+    </form>
+</section>

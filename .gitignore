@@ -1,0 +1,17 @@
+# Byggefiler – laves automatisk af "dotnet build" / "dotnet run"
+bin/
+obj/
+
+# Databasen indeholder brugere og adgangskoder og må IKKE uploades.
+# Den oprettes automatisk (tom), første gang appen starter.
+*.db
+*.db-shm
+*.db-wal
+
+# Editor- og systemfiler
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db

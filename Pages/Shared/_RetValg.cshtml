@@ -1,0 +1,13 @@
+@* Én persons valg af ret. Model: (feltnavn, id-præfiks, valgt ret, påkrævet) *@
+@model (string Navn, string Id, Ret? Valgt, bool Paakraevet)
+@{
+    var retter = new[] { (Ret.Vegansk, "Vegansk"), (Ret.Glutenfri, "Glutenfri"), (Ret.Koed, "Kødret") };
+}
+<div class="retter-knapper" role="radiogroup">
+    @foreach (var (vaerdi, tekst) in retter)
+    {
+        var id = $"{Model.Id}-{(int)vaerdi}";
+        <input type="radio" id="@id" name="@Model.Navn" value="@vaerdi" checked="@(vaerdi == Model.Valgt)" required="@Model.Paakraevet" />
+        <label for="@id">@tekst</label>
+    }
+</div>

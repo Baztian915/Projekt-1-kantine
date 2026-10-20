@@ -1,0 +1,71 @@
+@{
+    var aktivSide = ViewContext.RouteData.Values["page"] as string;
+
+    // Menuen viser kun de sider, brugerens rolle har adgang til
+    var menu = new List<(string Side, string Tekst, Microsoft.AspNetCore.Html.HtmlString Ikon)>();
+    if (User.IsInRole(Roller.Medarbejder) || User.IsInRole(Roller.Admin))
+        menu.Add(("/Valg", "Mine valg", Ikon.Kalender));
+    if (User.IsInRole(Roller.Kantine) || User.IsInRole(Roller.Admin))
+        menu.Add(("/Oversigt", "Oversigt", Ikon.Diagram));
+    if (User.IsInRole(Roller.Admin))
+        menu.Add(("/Brugere", "Brugere", Ikon.Brugere));
+
+    var navn = User.Identity?.Name ?? "";
+    var rolle = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] – Kantinen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-indre">
+            <a class="logo" href="/">
+                <span class="logo-ikon">@Ikon.Bestik</span>
+                <span>Kantinen</span>
+            </a>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <nav class="hovedmenu" aria-label="Hovedmenu">
+                    @foreach (var punkt in menu)
+                    {
+                        var erAktiv = punkt.Side == aktivSide;
+                        <a class="menupunkt @(erAktiv ? "aktiv" : "")" asp-page="@punkt.Side" aria-current="@(erAktiv ? "page" : null)">
+                            @punkt.Ikon
+                            <span>@punkt.Tekst</span>
+                        </a>
+                    }
+                </nav>
+
+                <div class="profil">
+                    <span class="avatar" aria-hidden="true">@(navn.Length > 0 ? char.ToUpper(navn[0]) : '?')</span>
+                    <span class="profil-tekst">
+                        <strong>@navn</strong>
+                        <small>@Roller.Visningsnavn(rolle)</small>
+                    </span>
+                    <form method="post" asp-page="/Logout">
+                        <button type="submit" class="log-ud" title="Log ud">
+                            @Ikon.LogUd
+                            <span>Log ud</span>
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </header>
+
+    <main class="indhold">
+        @RenderBody()
+    </main>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

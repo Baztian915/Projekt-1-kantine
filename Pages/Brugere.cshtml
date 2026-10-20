@@ -1,0 +1,128 @@
+@page
+@model BrugereModel
+@{
+    ViewData["Title"] = "Brugere";
+}
+
+<div class="sidehoved">
+    <div>
+        <h1>Brugere</h1>
+        <p class="undertekst">Opret nye brugere eller slet dem, der ikke skal have adgang længere.</p>
+    </div>
+</div>
+
+@if (TempData["Besked"] is string besked)
+{
+    <p class="besked">@Ikon.Flueben <span>@besked</span></p>
+}
+@if (Model.Fejl is not null)
+{
+    <p class="fejl">@Ikon.Advarsel <span>@Model.Fejl</span></p>
+}
+
+<section class="kort">
+    <h2>@Ikon.NyBruger Ny bruger</h2>
+    <form method="post" asp-page-handler="Opret" class="ny-bruger">
+        <div>
+            <label for="brugernavn">Brugernavn</label>
+            <input id="brugernavn" asp-for="Brugernavn" autocomplete="off" required />
+        </div>
+        <div>
+            <label for="kode">Adgangskode</label>
+            <input id="kode" asp-for="Kode" type="text" autocomplete="off" required />
+        </div>
+        <div>
+            <label for="rolle">Rolle</label>
+            <select id="rolle" asp-for="Rolle">
+                <option value="@Roller.Medarbejder">Medarbejder</option>
+                <option value="@Roller.Kantine">Kantine</option>
+                <option value="@Roller.Admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="knap">Opret bruger</button>
+    </form>
+</section>
+
+<section class="kort tabel-kort">
+    <table>
+        <thead>
+            <tr>
+                <th>Bruger</th>
+                <th>Rolle</th>
+                <th>Adgangskode</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model.Brugere)
+            {
+                var kode = Model.VisKode(b);
+                <tr>
+                    <td>
+                        <span class="bruger-celle">
+                            <span class="avatar lille" aria-hidden="true">@char.ToUpper(b.Brugernavn[0])</span>
+                            @b.Brugernavn
+                        </span>
+                    </td>
+                    <td><span class="rolle rolle-@b.Rolle">@Roller.Visningsnavn(b.Rolle)</span></td>
+                    <td>
+                        @if (kode is null)
+                        {
+                            <span class="daempet" title="Koden blev oprettet, før koder kunne vises. Skift koden for at kunne se den.">Kan ikke vises</span>
+                        }
+                        else
+                        {
+                            <span class="kode-celle">
+                                <code class="kode" data-kode="@kode">••••••••</code>
+                                <button type="button" class="ikon-knap" data-vis-kode title="Vis adgangskode">@Ikon.Oeje</button>
+                            </span>
+                        }
+                    </td>
+                    <td class="hoejre handlinger">
+                        <details class="skift-kode">
+                            <summary class="slet-knap">@Ikon.Noegle <span>Skift kode</span></summary>
+                            <form method="post" asp-page-handler="SkiftKode" asp-route-id="@b.Id" asp-route-navn="@b.Brugernavn">
+                                <input name="nyKode" type="text" placeholder="Ny adgangskode" autocomplete="off" required aria-label="Ny adgangskode til @b.Brugernavn" />
+                                <button type="submit" class="knap lille">Gem</button>
+                            </form>
+                        </details>
+                        @if (b.Id == Model.MitId)
+                        {
+                            <span class="daempet dig">Dig</span>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page-handler="Slet" asp-route-id="@b.Id" asp-route-navn="@b.Brugernavn"
+                                  data-navn="@b.Brugernavn"
+                                  onsubmit="return confirm('Slet brugeren ' + this.dataset.navn + ' og alle brugerens tilmeldinger?')">
+                                <button type="submit" class="slet-knap" title="Slet @b.Brugernavn">@Ikon.Skraldespand <span>Slet</span></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@section Scripts {
+    <script>
+        // Vis/skjul en adgangskode
+        document.querySelectorAll("[data-vis-kode]").forEach(knap => {
+            const kode = knap.previousElementSibling;
+            knap.addEventListener("click", () => {
+                const skjult = kode.textContent !== kode.dataset.kode;
+                kode.textContent = skjult ? kode.dataset.kode : "••••••••";
+                knap.title = skjult ? "Skjul adgangskode" : "Vis adgangskode";
+                knap.classList.toggle("aktiv", skjult);
+            });
+        });
+
+        // Kun én "Skift kode" åben ad gangen
+        document.querySelectorAll(".skift-kode").forEach(d => d.addEventListener("toggle", () => {
+            if (!d.open) return;
+            document.querySelectorAll(".skift-kode[open]").forEach(andre => { if (andre !== d) andre.open = false; });
+            d.querySelector("input").focus();
+        }));
+    </script>
+}

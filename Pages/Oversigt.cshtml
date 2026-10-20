@@ -1,0 +1,57 @@
+@page
+@model OversigtModel
+@{
+    ViewData["Title"] = "Oversigt";
+    var iDag = DateOnly.FromDateTime(DateTime.Today);
+    var flest = Math.Max(1, Model.Dage.Max(d => d.Portioner));
+}
+
+<div class="sidehoved">
+    <div>
+        <h1>Antal spisende</h1>
+        <p class="undertekst">Tilmeldinger for de næste @Hverdage.Antal hverdage.</p>
+    </div>
+</div>
+
+<div class="dag-grid">
+    @foreach (var d in Model.Dage)
+    {
+        <article class="kort dag-kort @(d.Dag == iDag ? "i-dag" : "")">
+            <header>
+                <div>
+                    <strong>@Hverdage.Ugedag(d.Dag)</strong>
+                    <span>@Hverdage.Dato(d.Dag)</span>
+                </div>
+                @if (d.Dag == iDag)
+                {
+                    <span class="maerke">I dag</span>
+                }
+            </header>
+
+            <div class="portioner">
+                <span class="stort-tal">@d.Portioner</span>
+                <span>portioner</span>
+            </div>
+
+            <div class="bjaelke" aria-hidden="true">
+                <span style="width: @(d.Portioner * 100 / flest)%"></span>
+            </div>
+
+            <dl class="fordeling">
+                <div><dt>Medarbejdere</dt><dd>@d.Medarbejdere</dd></div>
+                <div><dt>Gæster</dt><dd>@d.Gaester</dd></div>
+            </dl>
+
+            <ul class="retter" aria-label="Portioner pr. ret">
+                <li class="retter-titel">Portioner pr. ret</li>
+                <li><span>Vegansk</span><strong>@d.Vegansk</strong></li>
+                <li><span>Glutenfri</span><strong>@d.Glutenfri</strong></li>
+                <li><span>Kødret</span><strong>@d.Koed</strong></li>
+                @if (d.UdenRet > 0)
+                {
+                    <li class="daempet"><span>Ret ikke valgt</span><strong>@d.UdenRet</strong></li>
+                }
+            </ul>
+        </article>
+    }
+</div>

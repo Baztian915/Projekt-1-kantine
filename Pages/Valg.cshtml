@@ -1,0 +1,86 @@
+@page
+@model ValgModel
+@{
+    ViewData["Title"] = "Mine valg";
+    var iDag = DateOnly.FromDateTime(DateTime.Today);
+}
+
+<div class="sidehoved">
+    <h1>Mine valg</h1>
+    <p class="undertekst">Vælg om du spiser i kantinen, hvilken ret du vil have, og om du har gæster med.</p>
+</div>
+
+@if (TempData["Besked"] is string besked)
+{
+    <p class="besked">@Ikon.Flueben <span>@besked</span></p>
+}
+@if (Model.Fejl is not null)
+{
+    <p class="fejl">@Ikon.Advarsel <span>@Model.Fejl</span></p>
+}
+
+<form method="post" id="valg-formular">
+    <div class="kort dagsliste">
+        @foreach (var (dag, valgt) in Model.Tilmeldinger)
+        {
+            var noegle = dag.ToString("yyyy-MM-dd");
+            var antalGaester = valgt.GaesteRetter.Count;
+
+            <fieldset class="dagsraekke @(valgt.Spiser ? "spiser" : "")">
+                <legend class="skjult">@Hverdage.Ugedag(dag) @Hverdage.Dato(dag)</legend>
+
+                <div class="dagsnavn">
+                    <strong>@Hverdage.Ugedag(dag)</strong>
+                    <span>@Hverdage.Dato(dag)</span>
+                    @if (dag == iDag)
+                    {
+                        <span class="maerke">I dag</span>
+                    }
+                </div>
+
+                <div class="segment" role="radiogroup" aria-label="Spiser du i kantinen?">
+                    <input type="radio" id="spiser-@noegle-nej" name="Spiser[@noegle]" value="false" checked="@(!valgt.Spiser)" />
+                    <label for="spiser-@noegle-nej">Spiser ikke</label>
+                    <input type="radio" id="spiser-@noegle-ja" name="Spiser[@noegle]" value="true" checked="@valgt.Spiser" />
+                    <label for="spiser-@noegle-ja">Spiser</label>
+                </div>
+
+                <div class="detaljer">
+                    <div class="person">
+                        <span class="person-navn">Din ret</span>
+                        <partial name="_RetValg" model="@(($"Ret[{noegle}]", $"ret-{noegle}", valgt.DinRet, valgt.Spiser))" />
+                    </div>
+
+                    <div class="person-linje">
+                        <label class="person-navn" for="gaester-@noegle">Gæster</label>
+                        <select id="gaester-@noegle" name="Gaester[@noegle]" class="gaester-valg">
+                            @for (var i = 0; i <= DagsValg.MaksGaester; i++)
+                            {
+                                <option value="@i" selected="@(i == antalGaester)">@(i == 0 ? "Ingen gæster" : i == 1 ? "1 gæst" : $"{i} gæster")</option>
+                            }
+                        </select>
+                    </div>
+
+                    @for (var nr = 1; nr <= DagsValg.MaksGaester; nr++)
+                    {
+                        var synlig = nr <= antalGaester;
+                        var gaestRet = synlig ? valgt.GaesteRetter[nr - 1] : null;
+                        <div class="person" data-gaest="@nr" hidden="@(!synlig)">
+                            <span class="person-navn">Gæst @nr</span>
+                            <partial name="_RetValg" model="@(($"GaestRet[{noegle}_{nr}]", $"gaest-{noegle}-{nr}", gaestRet, valgt.Spiser && synlig))" />
+                        </div>
+                    }
+                </div>
+            </fieldset>
+        }
+    </div>
+
+    <div class="gem-bar">
+        <span class="gem-status" id="gem-status">Alle valg er gemt</span>
+        <button type="submit" class="knap">@Ikon.Flueben <span>Gem mine valg</span></button>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/valg.js" asp-append-version="true"></script>
+}
